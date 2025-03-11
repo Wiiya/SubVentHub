@@ -1,11 +1,16 @@
 <?php
 
 Route::get('/home', function () {
-    if (session('status')) {
-        return redirect()->route('admin.home')->with('status', session('status'));
+        
+    if (Auth::user()) {
+        if (Auth::user()->load('roles')->roles[0]->pivot->role_id !== 3) {
+            return redirect()->route('admin.dashboard')->with('status', session('status'));
+        } else {
+            return redirect()->route('home')->with('status', session('status'));
+        }
     }
 
-    return redirect()->route('admin.home');
+    return redirect()->route('home');
 });
 
 Auth::routes(['register' => false]);
@@ -18,7 +23,8 @@ Route::get('my-courses', 'EnrollmentController@myCourses')->name('enroll.myCours
 Route::resource('courses', 'CourseController')->only(['index', 'show']);
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'middleware' => ['auth']], function () {
-    Route::get('/', 'HomeController@index')->name('home');
+
+    Route::get('/', 'HomeController@index')->name('dashboard');
     // Permissions
     Route::delete('permissions/destroy', 'PermissionsController@massDestroy')->name('permissions.massDestroy');
     Route::resource('permissions', 'PermissionsController');
